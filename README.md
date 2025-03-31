@@ -14,3 +14,16 @@ Homework of AI subject - Topic: Fuzzy logic
 
 # Exercise 2.5's result
 <img width="437" alt="Image" src="https://github.com/user-attachments/assets/a7c59272-767e-421a-a234-bfbe831aa290" />
+
+# Exercise 2.6's result
+<img width="427" alt="Image" src="https://github.com/user-attachments/assets/e61dc5cf-4bd9-4c6a-aa7d-a09aab66bbb3" />
+
+# Exercise 2.8's result
+<img width="438" alt="Image" src="https://github.com/user-attachments/assets/baf57580-9c7d-4f96-8247-9385646ca5bf" />
+
+# Exercise 2.9's result
+<img width="546" alt="Image" src="https://github.com/user-attachments/assets/6aa7f603-06d0-44e6-9574-9c7651b036c7" />
+
+# Exercise 2.10's result
+<img width="579" alt="Image" src="https://github.com/user-attachments/assets/12b83692-a7b9-494c-aeac-b88ded1e9e0b" />
+<img width="434" alt="Image" src="https://github.com/user-attachments/assets/bb8f6599-8006-4b0d-b2af-4c054ef791af" />
