@@ -28,8 +28,12 @@ Homework of AI subject - Topic: Fuzzy logic
 <img width="579" alt="Image" src="https://github.com/user-attachments/assets/12b83692-a7b9-494c-aeac-b88ded1e9e0b" />
 <img width="434" alt="Image" src="https://github.com/user-attachments/assets/bb8f6599-8006-4b0d-b2af-4c054ef791af" />
 
+# BÀI 1 - HỆ THỐNG TÍNH TIỀN TRÊN GRAB
+<img width="408" alt="Image" src="https://github.com/user-attachments/assets/e6e0514f-2784-4537-97f9-ffd7834e95d6" />
+
 # BÀI 2 - CHIẾN LƯỢC CHIẾT KHẤU CHO KHÁCH HÀNG Ở CÁC CỬA HÀNG SHOPEE
 <img width="434" alt="Image" src="https://github.com/user-attachments/assets/33882ff2-5fdc-45ca-baa8-82e28b6a1d15" />
 
 # BÀI 3 - KẾ HOẠCH CHIẾN LƯỢC BÁN HÀNG CỦA SHOPEE DÀNH CHO CÁC CỬA HÀNG
 <img width="483" alt="Image" src="https://github.com/user-attachments/assets/a516453f-a4fc-4f6d-8db0-97b477674e16" />
+
