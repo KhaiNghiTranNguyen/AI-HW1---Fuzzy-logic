@@ -1,1 +1,79 @@
 #2.10
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+traffic = ctrl.Antecedent(np.arange(0, 11, 0.1), 'traffic')
+distance = ctrl.Antecedent(np.arange(0, 16, 0.1), 'distance')
+weather = ctrl.Antecedent(np.arange(0, 3, 0.1), 'weather')
+orderpreptime = ctrl.Antecedent(np.arange(0, 31, 1), 'order_prep_time')
+driverfatigue = ctrl.Antecedent(np.arange(0, 11, 1), 'driver_fatigue')
+delivery_time = ctrl.Consequent(np.arange(0, 61, 0.1), 'delivery_time')
+incentive = ctrl.Consequent(np.arange(0, 61, 0.1), 'incentive')
+rating = ctrl.Consequent(np.arange(0, 6, 0.1), 'rating')
+
+traffic['low'] = fuzz.trimf(traffic.universe, [0, 0, 5])
+traffic['medium'] = fuzz.trimf(traffic.universe, [0,5,10])
+traffic['high'] = fuzz.trimf(traffic.universe, [5,10,10])
+distance['short'] = fuzz.trimf(distance.universe, [0, 0, 3])
+distance['medium'] = fuzz.trimf(distance.universe, [3, 5.5 , 8])
+distance['long'] = fuzz.trimf(distance.universe, [8, 11.5, 15])
+weather['clear'] = fuzz.trimf(weather.universe, [0, 0, 1])
+weather['rainy'] = fuzz.trimf(weather.universe, [0, 1, 2])
+weather['stromy'] = fuzz.trimf(weather.universe, [1, 2, 3])
+orderpreptime['fast'] = fuzz.trimf(orderpreptime.universe, [0, 0, 5])
+orderpreptime['medium'] = fuzz.trimf(orderpreptime.universe, [5, 10, 15])
+orderpreptime['slow'] = fuzz.trimf(orderpreptime.universe, [10, 20.5, 31])
+driverfatigue['low'] = fuzz.trimf(driverfatigue.universe, [0, 0, 5])
+driverfatigue['medium'] = fuzz.trimf(driverfatigue.universe, [0, 5, 10])
+driverfatigue['high'] = fuzz.trimf(driverfatigue.universe, [5, 10, 10])
+
+delivery_time['short'] = fuzz.trimf(delivery_time.universe, [0, 0, 15])
+delivery_time['medium'] = fuzz.trimf(delivery_time.universe, [0, 30, 60])
+delivery_time['long'] = fuzz.trimf(delivery_time.universe, [40, 50, 60])
+incentive['low'] = fuzz.trimf(incentive.universe, [0, 0, 20])
+incentive['medium'] = fuzz.trimf(incentive.universe, [10, 30, 50])
+incentive['high'] = fuzz.trimf(incentive.universe,[40,60,60])
+rating['poor'] = fuzz.trimf(rating.universe, [1, 1.5, 2])
+rating['average'] = fuzz.trimf(rating.universe, [2, 2.5, 3])
+rating['excellent'] = fuzz.trimf(rating.universe, [3, 4, 5])
+
+rule1 = ctrl.Rule(traffic['low'] & distance['short'], delivery_time['short'])
+rule2 = ctrl.Rule(traffic['medium'] & distance['medium'], delivery_time['medium'])
+rule3 = ctrl.Rule(traffic['high'] & distance['long'], delivery_time['long'])
+
+rule4 = ctrl.Rule(weather['clear'], incentive['low'])
+rule5 = ctrl.Rule(weather['rainy'], incentive['medium'])
+rule6 = ctrl.Rule(weather['stromy'], incentive['high'])
+
+rule7 = ctrl.Rule(orderpreptime['fast'] & traffic['low'], delivery_time['short'])
+rule8 = ctrl.Rule(orderpreptime['medium'] & traffic['medium'], delivery_time['medium'])
+rule9 = ctrl.Rule(orderpreptime['slow'] & traffic['high'], delivery_time['long'])
+
+rule10 = ctrl.Rule(driverfatigue['low'], rating['excellent'])
+rule11 = ctrl.Rule(driverfatigue['medium'], rating['average'])
+rule12 = ctrl.Rule(driverfatigue['high'], rating['poor'])
+
+rule13 = ctrl.Rule(distance['long'] & weather['stromy'] & traffic['high'], delivery_time['long'] )
+rule14 = ctrl.Rule(distance['short'] & weather['clear'] & traffic['low'], (delivery_time['medium'], incentive['low']))
+rule15 = ctrl.Rule(driverfatigue['high'] & traffic['high'], (rating['poor'], delivery_time['long']))
+
+contrl_system = ctrl.ControlSystem([
+    rule1, rule2, rule3, rule4, rule5, rule6,
+    rule7, rule8, rule9, rule10, rule11, rule12,
+    rule13, rule14, rule15
+])
+
+fuzzy_system = ctrl.ControlSystemSimulation(contrl_system)
+fuzzy_system.input['traffic'] = 5
+fuzzy_system.input['distance'] = 4
+fuzzy_system.input['weather'] = 2
+fuzzy_system.input['order_prep_time'] = 10
+fuzzy_system.input['driver_fatigue'] = 4
+fuzzy_system.compute()
+print(f"Thời gian giao hàng dự kiến: {fuzzy_system.output['delivery_time']}")
+print(f"Điểm thưởng: {fuzzy_system.output['incentive']}")
+print(f"Đánh giá: {fuzzy_system.output['rating']}")
+delivery_time.view(sim=fuzzy_system)
+incentive.view(sim=fuzzy_system)
+rating.view(sim=fuzzy_system)
