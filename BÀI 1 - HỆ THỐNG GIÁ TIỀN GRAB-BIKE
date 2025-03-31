@@ -1,0 +1,89 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+distance = ctrl.Antecedent(np.arange(0, 51, 0.1), 'distance')
+traffic = ctrl.Antecedent(np.arange(0, 101, 0.1), 'traffic') 
+demand = ctrl.Antecedent(np.arange(0, 101, 0.1), 'demand') 
+weather = ctrl.Antecedent(np.arange(0, 4, 0.1), 'weather') 
+rating = ctrl.Antecedent(np.arange(1, 6, 0.5), 'rating')
+punctuality = ctrl.Antecedent(np.arange(0, 101, 0.1), 'punctuality') 
+
+price = ctrl.Consequent(np.arange(0, 101, 1), 'price')  
+incentive = ctrl.Consequent(np.arange(0, 51, 0.1), 'incentive')
+
+distance['short'] = fuzz.trimf(distance.universe, [0, 0, 3])
+distance['medium'] = fuzz.trimf(distance.universe, [2, 5, 8])
+distance['long'] = fuzz.trimf(distance.universe, [6, 13, 20])
+distance['very long'] = fuzz.trimf(distance.universe, [15, 32.5, 50])
+
+traffic['low'] = fuzz.trimf(traffic.universe, [0, 0, 30])
+traffic['medium'] = fuzz.trimf(traffic.universe, [20, 45, 70])
+traffic['high'] = fuzz.trimf(traffic.universe, [60, 85, 100])
+
+demand['low'] = fuzz.trimf(demand.universe, [0, 0, 30])
+demand['medium'] = fuzz.trimf(demand.universe, [20, 50, 70])
+demand['high'] = fuzz.trimf(demand.universe, [60, 85, 100])
+
+weather['good'] = fuzz.trimf(weather.universe, [0, 0, 1])
+weather['moderate'] = fuzz.trimf(weather.universe, [0, 1, 2])
+weather['bad'] = fuzz.trimf(weather.universe, [1, 2, 2])
+
+rating['poor'] = fuzz.trimf(rating.universe, [1, 1, 2.5])
+rating['average'] = fuzz.trimf(rating.universe, [2, 3, 4])
+rating['good'] = fuzz.trimf(rating.universe, [3, 4, 5])
+
+punctuality['late'] = fuzz.trimf(punctuality.universe, [0, 0, 50])
+punctuality['on time'] = fuzz.trimf(punctuality.universe, [40, 60, 80])
+punctuality['early'] = fuzz.trimf(punctuality.universe, [70, 100, 100])
+
+price['low'] = fuzz.trimf(price.universe, [0, 0, 25])
+price['medium'] = fuzz.trimf(price.universe, [0, 25, 50])
+price['high'] = fuzz.trimf(price.universe, [25, 50, 75])
+price['very high'] = fuzz.trimf(price.universe, [50, 75, 100])
+
+incentive['none'] = fuzz.trimf(incentive.universe, [0, 0, 10])
+incentive['few'] = fuzz.trimf(incentive.universe, [0, 10, 25])
+incentive['moderate'] = fuzz.trimf(incentive.universe, [10, 25, 40])
+incentive['high'] = fuzz.trimf(incentive.universe, [25, 40, 50])
+
+rule1 = ctrl.Rule(distance['short'] & traffic['low'] & demand['low'], price['low'])
+rule2 = ctrl.Rule(distance['short'] & traffic['medium'] & demand['high'], price['medium'])
+rule3 = ctrl.Rule(distance['medium'] & traffic['high'] & demand['high'], price['high'])
+rule4 = ctrl.Rule(distance['long'] & traffic['medium'] & weather['good'], price['medium'])
+rule5 = ctrl.Rule(distance['long'] & traffic['high'] & weather['bad'], price['very high'])
+rule6 = ctrl.Rule(distance['very long'] & traffic['high'] & demand['high'], price['very high'])
+rule7 = ctrl.Rule(distance['medium'] & traffic['low'] & demand['low'], price['medium'])
+rule8 = ctrl.Rule(distance['short'] & traffic['high'] & weather['bad'], price['high'])
+rule9 = ctrl.Rule(distance['very long'] & weather['bad'], price['very high'])
+rule10 = ctrl.Rule(distance['medium'] & traffic['medium'] & weather['moderate'], price['medium'])
+
+rule11 = ctrl.Rule(rating['good'] & punctuality['early'], incentive['high'])
+rule12 = ctrl.Rule(rating['average'] & punctuality['on time'], incentive['moderate'])
+rule13 = ctrl.Rule(rating['poor'] & punctuality['late'], incentive['none'])
+rule14 = ctrl.Rule(distance['long'] & traffic['high'] & punctuality['on time'], incentive['high'])
+rule15 = ctrl.Rule(distance['medium'] & traffic['medium'] & rating['good'], incentive['moderate'])
+rule16 = ctrl.Rule(rating['poor'] & punctuality['late'], incentive['none'])
+rule17 = ctrl.Rule(distance['very long'] & weather['bad'] & rating['good'], incentive['high'])
+rule18 = ctrl.Rule(distance['short'] & rating['average'] & punctuality['on time'], incentive['few'])
+rule19 = ctrl.Rule(distance['long'] & traffic['high'] & punctuality['late'], incentive['none'])
+rule20 = ctrl.Rule(distance['medium'] & weather['moderate'] & rating['good'], incentive['moderate'])
+
+contrl_system = ctrl.ControlSystem([
+    rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10,
+    rule11, rule12, rule13, rule14, rule15, rule16, rule17, rule18, rule19, rule20
+])
+
+fuzzy_system = ctrl.ControlSystemSimulation(contrl_system)
+
+fuzzy_system.input['distance'] = 3
+fuzzy_system.input['traffic'] = 2
+fuzzy_system.input['demand'] = 1
+fuzzy_system.input['weather'] = 0 
+fuzzy_system.input['rating'] = 5
+fuzzy_system.input['punctuality'] = 90
+fuzzy_system.compute()
+
+print(f"Predicted Price: {fuzzy_system.output['price']}")
+
+price.view(sim=fuzzy_system)
