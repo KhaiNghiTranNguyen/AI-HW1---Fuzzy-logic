@@ -1,1 +1,68 @@
 #2.2
+!pip install scikit-fuzzy
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+
+blood_sugar = ctrl.Antecedent(np.arange(0, 251, 0.1), 'blood_sugar') 
+bmi = ctrl.Antecedent(np.arange(10, 41, 0.1), 'bmi')  
+urination = ctrl.Antecedent(np.arange(0, 3, 1), 'urination')  
+fatigue = ctrl.Antecedent(np.arange(0, 3, 1), 'fatigue')  
+
+risk = ctrl.Consequent(np.arange(0, 101, 0.1), 'risk')  
+
+blood_sugar['Thấp'] = fuzz.trimf(blood_sugar.universe, [0, 0, 80])
+blood_sugar['Bình thường'] = fuzz.trimf(blood_sugar.universe, [80, 100, 120])
+blood_sugar['Cao'] = fuzz.trimf(blood_sugar.universe, [120, 160, 200])
+blood_sugar['Rất cao'] = fuzz.trapmf(blood_sugar.universe, [200, 220, 250, 250]) 
+
+bmi['Thiếu cân'] = fuzz.trimf(bmi.universe, [10, 10, 18.5])  
+bmi['Bình thường'] = fuzz.trimf(bmi.universe, [18.5, 21.7, 24.9])
+bmi['Thừa cân'] = fuzz.trimf(bmi.universe, [25, 27.5, 29.9])
+bmi['Béo phì'] = fuzz.trapmf(bmi.universe, [30, 33, 40, 40])  
+
+urination['Hiếm khi'] = fuzz.trimf(urination.universe, [0, 0, 1])
+urination['Đôi khi'] = fuzz.trimf(urination.universe, [0, 1, 2])
+urination['Thường xuyên'] = fuzz.trimf(urination.universe, [1, 2, 2])
+
+fatigue['Thấp'] = fuzz.trimf(fatigue.universe, [0, 0, 1])
+fatigue['Trung bình'] = fuzz.trimf(fatigue.universe, [0, 1, 2])
+fatigue['Cao'] = fuzz.trimf(fatigue.universe, [1, 2, 2])
+
+risk['Nguy cơ thấp'] = fuzz.trimf(risk.universe, [0, 0, 30])
+risk['Nguy cơ trung bình'] = fuzz.trimf(risk.universe, [20, 50, 70])
+risk['Nguy cơ cao'] = fuzz.trimf(risk.universe, [50, 75, 90])
+risk['Nguy cơ rất cao'] = fuzz.trimf(risk.universe, [80, 100, 100])
+
+rule1 = ctrl.Rule(blood_sugar['Rất cao'] & urination['Thường xuyên'], risk['Nguy cơ rất cao'])
+rule2 = ctrl.Rule(blood_sugar['Rất cao'] & urination['Đôi khi'], risk['Nguy cơ cao'])
+rule3 = ctrl.Rule(blood_sugar['Cao'] & urination['Thường xuyên'], risk['Nguy cơ cao'])
+rule4 = ctrl.Rule(blood_sugar['Bình thường'] & urination['Hiếm khi'], risk['Nguy cơ thấp'])
+rule5 = ctrl.Rule(blood_sugar['Rất cao'] & bmi['Béo phì'], risk['Nguy cơ rất cao'])
+rule6 = ctrl.Rule(blood_sugar['Rất cao'] & bmi['Thừa cân'], risk['Nguy cơ cao'])
+rule7 = ctrl.Rule(blood_sugar['Cao'] & bmi['Thừa cân'], risk['Nguy cơ cao'])
+rule8 = ctrl.Rule(blood_sugar['Cao'] & bmi['Thừa cân'], risk['Nguy cơ trung bình']) #Duplicated rule
+rule9 = ctrl.Rule(blood_sugar['Bình thường'] & bmi['Bình thường'], risk['Nguy cơ thấp'])
+rule10 = ctrl.Rule(blood_sugar['Rất cao'] & fatigue['Cao'], risk['Nguy cơ rất cao'])
+rule11 = ctrl.Rule(blood_sugar['Cao'] & fatigue['Cao'], risk['Nguy cơ cao'])
+rule12 = ctrl.Rule(blood_sugar['Cao'] & fatigue['Trung bình'], risk['Nguy cơ trung bình'])
+rule13 = ctrl.Rule(blood_sugar['Bình thường'] & fatigue['Thấp'], risk['Nguy cơ thấp'])
+
+control_system = ctrl.ControlSystem([rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, rule12, rule13])
+fuzzy_system = ctrl.ControlSystemSimulation(control_system)
+
+# Input values for testing (example)
+fuzzy_system.input['blood_sugar'] = 220 # Example: Very High blood sugar
+fuzzy_system.input['bmi'] = 32 # Example: Obese
+fuzzy_system.input['urination'] = 2 # Example: Often
+fuzzy_system.input['fatigue'] = 2 # Example: High
+
+# Compute the result
+fuzzy_system.compute()
+
+# Print the results
+print(f"Diabetes Risk Level: {fuzzy_system.output['risk']}")
+
+# Show the risk membership function with the result
+risk.view(sim=fuzzy_system)
