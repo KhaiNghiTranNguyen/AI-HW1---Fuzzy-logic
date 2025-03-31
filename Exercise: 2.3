@@ -1,1 +1,82 @@
 #2.3
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+demand_level = ctrl.Antecedent(np.arange(0, 11, 1), 'demand_level') 
+competitor_pricing = ctrl.Antecedent(np.arange(0, 11, 1), 'competitor_pricing')
+production_cost = ctrl.Antecedent(np.arange(0, 11, 1), 'production_cost')  
+seasonality = ctrl.Antecedent(np.arange(0, 3, 1), 'seasonality')  
+stock_level = ctrl.Antecedent(np.arange(0, 11, 1), 'stock_level') 
+
+final_price = ctrl.Consequent(np.arange(0, 101, 1), 'final_price')
+
+demand_level['Thấp'] = fuzz.trimf(demand_level.universe, [0, 0, 5])
+demand_level['Trung bình'] = fuzz.trimf(demand_level.universe, [0, 5, 10])
+demand_level['Cao'] = fuzz.trimf(demand_level.universe, [5, 10, 10])
+
+competitor_pricing['Thấp'] = fuzz.trimf(competitor_pricing.universe, [0, 0, 5])
+competitor_pricing['Trung bình'] = fuzz.trimf(competitor_pricing.universe, [0, 5, 10])
+competitor_pricing['Cao'] = fuzz.trimf(competitor_pricing.universe, [5, 10, 10])
+
+production_cost['Thấp'] = fuzz.trimf(production_cost.universe, [0, 0, 5])
+production_cost['Trung bình'] = fuzz.trimf(production_cost.universe, [0, 5, 10])
+production_cost['Cao'] = fuzz.trimf(production_cost.universe, [5, 10, 10])
+
+seasonality['Ngoài thời cao điểm'] = fuzz.trimf(seasonality.universe, [0, 0, 1])
+seasonality['Bình thường'] = fuzz.trimf(seasonality.universe, [0, 1, 2])
+seasonality['Cao điểm'] = fuzz.trimf(seasonality.universe, [1, 2, 2])
+
+stock_level['Thấp'] = fuzz.trimf(stock_level.universe, [0, 0, 5])
+stock_level['Trung bình'] = fuzz.trimf(stock_level.universe, [0, 5, 10])
+stock_level['Cao'] = fuzz.trimf(stock_level.universe, [5, 10, 10])
+
+final_price['Rất thấp'] = fuzz.trimf(final_price.universe, [0, 0, 20])
+final_price['Thấp'] = fuzz.trimf(final_price.universe, [10, 30, 40])
+final_price['Trung bình'] = fuzz.trimf(final_price.universe, [30, 50, 70])
+final_price['Cao'] = fuzz.trimf(final_price.universe, [60, 80, 90])
+final_price['Rất cao'] = fuzz.trimf(final_price.universe, [80, 100, 100])
+
+rule1 = ctrl.Rule(demand_level['Cao'] & competitor_pricing['Cao'] & stock_level['Thấp'], final_price['Rất cao'])
+rule2 = ctrl.Rule(demand_level['Cao'] & seasonality['Cao điểm'] & stock_level['Thấp'], final_price['Rất cao'])
+rule3 = ctrl.Rule(demand_level['Trung bình'] & production_cost['Cao'] & stock_level['Thấp'], final_price['Rất cao'])
+
+rule4 = ctrl.Rule(demand_level['Cao'] & competitor_pricing['Trung bình'] & stock_level['Trung bình'], final_price['Cao'])
+rule5 = ctrl.Rule(demand_level['Trung bình'] & competitor_pricing['Cao'] & stock_level['Thấp'], final_price['Cao'])
+rule6 = ctrl.Rule(demand_level['Trung bình'] & competitor_pricing['Cao'] & stock_level['Thấp'], final_price['Cao']) 
+rule7 = ctrl.Rule(demand_level['Cao'] & seasonality['Cao điểm'] & stock_level['Trung bình'], final_price['Cao'])
+
+rule8 = ctrl.Rule(demand_level['Trung bình'] & competitor_pricing['Trung bình'] & stock_level['Trung bình'], final_price['Trung bình'])
+rule9 = ctrl.Rule(demand_level['Thấp'] & competitor_pricing['Cao'] & stock_level['Trung bình'], final_price['Trung bình'])
+rule10 = ctrl.Rule(demand_level['Trung bình'] & production_cost['Trung bình'] & stock_level['Trung bình'], final_price['Trung bình'])
+
+rule11 = ctrl.Rule(demand_level['Thấp'] & competitor_pricing['Thấp'] & stock_level['Cao'], final_price['Thấp'])
+rule12 = ctrl.Rule(demand_level['Trung bình'] & production_cost['Thấp'] & stock_level['Cao'], final_price['Thấp'])
+rule13 = ctrl.Rule(demand_level['Thấp'] & seasonality['Ngoài thời cao điểm'] & stock_level['Cao'], final_price['Thấp'])
+
+rule14 = ctrl.Rule(demand_level['Thấp'] & competitor_pricing['Thấp'] & stock_level['Cao'], final_price['Rất thấp']) 
+rule15 = ctrl.Rule(demand_level['Thấp'] & seasonality['Ngoài thời cao điểm'] & stock_level['Cao'], final_price['Rất thấp'])
+rule16 = ctrl.Rule(demand_level['Trung bình'] & competitor_pricing['Thấp'] & stock_level['Cao'], final_price['Rất thấp'])
+rule17 = ctrl.Rule(demand_level['Trung bình'] & competitor_pricing['Thấp'] & stock_level['Cao'], final_price['Rất thấp'])
+
+pricing_control = ctrl.ControlSystem([
+    rule1, rule2, rule3, 
+    rule4, rule5, rule6, rule7, 
+    rule8, rule9, rule10, 
+    rule11, rule12, rule13, 
+    rule14, rule15, rule16, rule17
+    ])
+pricing_system = ctrl.ControlSystemSimulation(pricing_control)
+
+pricing_system.input['demand_level'] = 6
+pricing_system.input['competitor_pricing'] = 5
+pricing_system.input['production_cost'] = 3
+pricing_system.input['seasonality'] = 2  
+pricing_system.input['stock_level'] = 2 
+
+pricing_system.compute()
+
+print(f"Final Price: {pricing_system.output['final_price']}")
+
+
+final_price.view(sim=pricing_system)
