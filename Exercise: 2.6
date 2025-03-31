@@ -1,1 +1,64 @@
 #2.6
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+weight = ctrl.Antecedent(np.arange(0, 1001, 0.1), 'weight')  
+food_type = ctrl.Antecedent(np.arange(0, 3, 1), 'food_type') 
+temperature = ctrl.Antecedent(np.arange(0, 61, 0.1), 'temperature') 
+
+cooking_time = ctrl.Consequent(np.arange(0, 61, 0.1), 'cooking_time')  
+power_level = ctrl.Consequent(np.arange(0, 101, 0.1), 'power_level') 
+
+weight['L'] = fuzz.trimf(weight.universe, [0, 0, 300])
+weight['M'] = fuzz.trimf(weight.universe, [200, 500, 800])
+weight['H'] = fuzz.trimf(weight.universe, [700, 1000, 1000])
+
+food_type['S'] = fuzz.trimf(food_type.universe, [0, 0, 1])
+food_type['M'] = fuzz.trimf(food_type.universe, [0, 1, 2])
+food_type['H'] = fuzz.trimf(food_type.universe, [1, 2, 2])
+
+temperature['C'] = fuzz.trimf(temperature.universe, [0, 0, 10])
+temperature['W'] = fuzz.trimf(temperature.universe, [20, 25, 30])
+temperature['H'] = fuzz.trimf(temperature.universe, [40, 50, 60])
+
+cooking_time['S'] = fuzz.trimf(cooking_time.universe, [0, 0, 20])
+cooking_time['M'] = fuzz.trimf(cooking_time.universe, [10, 30, 50])
+cooking_time['L'] = fuzz.trimf(cooking_time.universe, [40, 60, 60])
+
+power_level['L'] = fuzz.trimf(power_level.universe, [0, 0, 40])
+power_level['M'] = fuzz.trimf(power_level.universe, [30, 60, 80])
+power_level['H'] = fuzz.trimf(power_level.universe, [70, 100, 100])
+
+rule1 = ctrl.Rule(weight['L'], cooking_time['S'])
+rule2 = ctrl.Rule(weight['M'], cooking_time['M'])
+rule3 = ctrl.Rule(weight['H'], cooking_time['L'])
+
+rule4 = ctrl.Rule(food_type['S'], power_level['L'])
+rule5 = ctrl.Rule(food_type['M'], power_level['M'])
+rule6 = ctrl.Rule(food_type['H'], power_level['H'])
+
+rule7 = ctrl.Rule(temperature['C'], cooking_time['L'])
+rule8 = ctrl.Rule(temperature['W'], cooking_time['M'])
+rule9 = ctrl.Rule(temperature['H'], cooking_time['S'])
+
+rule10 = ctrl.Rule(weight['H'] & food_type['H'] & temperature['C'], (cooking_time['L'], power_level['H']))
+rule11 = ctrl.Rule(weight['M'] & food_type['S'] & temperature['W'], (cooking_time['M'], power_level['L']))
+rule12 = ctrl.Rule(weight['L'] & food_type['M'] & temperature['H'], (cooking_time['S'], power_level['M']))
+
+microwave_ctrl = ctrl.ControlSystem([
+    rule1, rule2, rule3, 
+    rule4, rule5, rule6, 
+    rule7, rule8, rule9, 
+    rule10, rule11, rule12
+    ])
+microwave_sim = ctrl.ControlSystemSimulation(microwave_ctrl)
+
+microwave_sim.input['weight'] = 290  
+microwave_sim.input['food_type'] = 1  
+microwave_sim.input['temperature'] = 30
+microwave_sim.compute()
+print(f"Cooking Time: {microwave_sim.output['cooking_time']} minutes")
+print(f"Power Level: {microwave_sim.output['power_level']}")
+cooking_time.view(sim=microwave_sim)
+power_level.view(sim=microwave_sim)
