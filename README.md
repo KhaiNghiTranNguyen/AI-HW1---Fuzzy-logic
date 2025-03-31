@@ -30,3 +30,6 @@ Homework of AI subject - Topic: Fuzzy logic
 
 # BÀI 2 - CHIẾN LƯỢC CHIẾT KHẤU CHO KHÁCH HÀNG Ở CÁC CỬA HÀNG SHOPEE
 <img width="434" alt="Image" src="https://github.com/user-attachments/assets/33882ff2-5fdc-45ca-baa8-82e28b6a1d15" />
+
+# BÀI 3 - KẾ HOẠCH CHIẾN LƯỢC BÁN HÀNG CỦA SHOPEE DÀNH CHO CÁC CỬA HÀNG
+<img width="483" alt="Image" src="https://github.com/user-attachments/assets/a516453f-a4fc-4f6d-8db0-97b477674e16" />
