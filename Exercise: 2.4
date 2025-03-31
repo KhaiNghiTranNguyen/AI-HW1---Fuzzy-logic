@@ -1,1 +1,68 @@
 #2.4
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+load = ctrl.Antecedent(np.arange(0, 11, 0.1), 'load')  
+dirt = ctrl.Antecedent(np.arange(0, 11, 0.1), 'dirt')  
+fabric = ctrl.Antecedent(np.arange(0, 3, 0.1), 'fabric')
+
+wash_time = ctrl.Consequent(np.arange(0, 61, 0.1), 'wash_time')  
+water_level = ctrl.Consequent(np.arange(0, 11, 0.1), 'water_level')
+
+load['S'] = fuzz.trimf(load.universe, [0, 0, 5])
+load['M'] = fuzz.trimf(load.universe, [0, 5, 10])
+load['L'] = fuzz.trimf(load.universe, [5, 10, 10])
+
+dirt['L'] = fuzz.trimf(dirt.universe, [0, 0, 5])
+dirt['M'] = fuzz.trimf(dirt.universe, [0, 5, 10])
+dirt['H'] = fuzz.trimf(dirt.universe, [5, 10, 10])
+
+fabric['D'] = fuzz.trimf(fabric.universe, [0, 0, 1])
+fabric['N'] = fuzz.trimf(fabric.universe, [0, 1, 2])
+fabric['H'] = fuzz.trimf(fabric.universe, [1, 2, 2])
+
+
+wash_time['S'] = fuzz.trimf(wash_time.universe, [0, 0, 20])
+wash_time['M'] = fuzz.trimf(wash_time.universe, [10, 30, 50])
+wash_time['L'] = fuzz.trimf(wash_time.universe, [40, 60, 60])
+
+water_level['L'] = fuzz.trimf(water_level.universe, [0, 0, 5])
+water_level['M'] = fuzz.trimf(water_level.universe, [0, 5, 10])
+water_level['H'] = fuzz.trimf(water_level.universe, [5, 10, 10])
+
+rule1 = ctrl.Rule(load['S'] & dirt['L'], (wash_time['S'], water_level['L']))
+rule2 = ctrl.Rule(load['S'] & dirt['M'], (wash_time['M'], water_level['M']))
+rule3 = ctrl.Rule(load['S'] & dirt['H'], (wash_time['L'], water_level['M']))
+rule4 = ctrl.Rule(load['M'] & dirt['L'], (wash_time['M'], water_level['M']))
+rule5 = ctrl.Rule(load['M'] & dirt['M'], (wash_time['L'], water_level['M']))
+rule6 = ctrl.Rule(load['M'] & dirt['H'], (wash_time['L'], water_level['H']))
+rule7 = ctrl.Rule(load['L'] & dirt['L'], (wash_time['M'], water_level['H']))
+rule8 = ctrl.Rule(load['L'] & dirt['L'], (wash_time['L'], water_level['H'])) 
+rule9 = ctrl.Rule(load['L'] & dirt['M'], (wash_time['L'], water_level['H']))
+rule10 = ctrl.Rule(load['L'] & dirt['M'], (wash_time['L'], water_level['H'])) 
+rule11 = ctrl.Rule(load['L'] & dirt['H'], (wash_time['L'], water_level['H']))
+rule12 = ctrl.Rule(fabric['D'], (wash_time['S'], water_level['L']))
+rule13 = ctrl.Rule(fabric['N'], (wash_time['M'], water_level['M'])) 
+rule14 = ctrl.Rule(fabric['H'], (wash_time['L'], water_level['H']))
+rule15 = ctrl.Rule(load['L'] & dirt['H'] & fabric['H'], (wash_time['L'], water_level['H'])) 
+rule16 = ctrl.Rule(load['S'] & dirt['L'] & fabric['D'], (wash_time['S'], water_level['L']))
+rule17 = ctrl.Rule(load['M'] & dirt['M'] & fabric['N'], (wash_time['M'], water_level['M']))
+
+washing_ctrl = ctrl.ControlSystem([
+    rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, 
+    rule12, rule13, rule14, 
+    rule15, rule16, rule17
+    ])
+washing_sim = ctrl.ControlSystemSimulation(washing_ctrl)
+
+washing_sim.input['load'] = 2
+washing_sim.input['dirt'] = 3
+washing_sim.input['fabric'] = 4
+washing_sim.compute()
+
+print(f"Recommended Wash Time: {washing_sim.output['wash_time']} minutes")
+print(f"Recommended Water Level: {washing_sim.output['water_level']}")
+
+wash_time.view(sim=washing_sim)
+water_level.view(sim=washing_sim)
