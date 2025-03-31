@@ -1,1 +1,74 @@
 #2.5
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+temperature = ctrl.Antecedent(np.arange(15, 41, 1), 'temperature')  
+humidity = ctrl.Antecedent(np.arange(0, 101, 1), 'humidity')
+people = ctrl.Antecedent(np.arange(0, 11, 1), 'people') 
+
+fan_speed = ctrl.Consequent(np.arange(0, 11, 1), 'fan_speed')  
+cooling = ctrl.Consequent(np.arange(0, 11, 1), 'cooling')  
+
+temperature['C'] = fuzz.trimf(temperature.universe, [15, 15, 22])
+temperature['CL'] = fuzz.trimf(temperature.universe, [18, 22, 25])
+temperature['CM'] = fuzz.trimf(temperature.universe, [22, 25, 28])
+temperature['W'] = fuzz.trimf(temperature.universe, [25, 28, 32])
+temperature['H'] = fuzz.trimf(temperature.universe, [28, 40, 40])
+
+humidity['L'] = fuzz.trimf(humidity.universe, [0, 0, 40])
+humidity['M'] = fuzz.trimf(humidity.universe, [30, 50, 70])
+humidity['H'] = fuzz.trimf(humidity.universe, [60, 100, 100])
+
+people['F'] = fuzz.trimf(people.universe, [0, 0, 4])
+people['M'] = fuzz.trimf(people.universe, [2, 5, 7])
+people['MA'] = fuzz.trimf(people.universe, [6, 10, 10])
+
+fan_speed['L'] = fuzz.trimf(fan_speed.universe, [0, 0, 5])
+fan_speed['M'] = fuzz.trimf(fan_speed.universe, [0, 5, 10])
+fan_speed['H'] = fuzz.trimf(fan_speed.universe, [5, 10, 10])
+
+cooling['L'] = fuzz.trimf(cooling.universe, [0, 0, 5])
+cooling['M'] = fuzz.trimf(cooling.universe, [0, 5, 10])
+cooling['H'] = fuzz.trimf(cooling.universe, [5, 10, 10])
+
+rule1 = ctrl.Rule(temperature['C'], fan_speed['L'])
+rule2 = ctrl.Rule(temperature['CL'], fan_speed['L'])
+rule3 = ctrl.Rule(temperature['CM'], fan_speed['M'])
+rule4 = ctrl.Rule(temperature['W'], fan_speed['H'])
+rule5 = ctrl.Rule(temperature['H'], fan_speed['H'])
+
+rule6 = ctrl.Rule(temperature['C'], cooling['L'])
+rule7 = ctrl.Rule(temperature['CL'], cooling['L'])
+rule8 = ctrl.Rule(temperature['CM'], cooling['M'])
+rule9 = ctrl.Rule(temperature['W'], cooling['H'])
+rule10 = ctrl.Rule(temperature['H'], cooling['H'])
+
+rule11 = ctrl.Rule(humidity['L'], cooling['L'])
+rule12 = ctrl.Rule(humidity['M'], cooling['M'])
+rule13 = ctrl.Rule(humidity['H'], cooling['H'])
+
+rule14 = ctrl.Rule(people['F'], fan_speed['L'])
+rule15 = ctrl.Rule(people['M'], fan_speed['M'])
+rule16 = ctrl.Rule(people['MA'], fan_speed['H'])
+
+rule17 = ctrl.Rule(temperature['H'] & humidity['H'] & people['MA'], (cooling['H'], fan_speed['H']))
+rule18 = ctrl.Rule(temperature['CM'] & humidity['M'] & people['M'], (cooling['M'], fan_speed['M']))
+rule19 = ctrl.Rule(temperature['CL'] & humidity['L'] & people['F'], (cooling['L'], fan_speed['L']))
+
+ac_ctrl = ctrl.ControlSystem([
+    rule1, rule2, rule3, rule4, rule5, 
+    rule6, rule7, rule8, rule9, rule10, 
+    rule11, rule12, 
+    rule13, rule14, rule15, 
+    rule16, rule17, rule18, rule19])
+ac_sim = ctrl.ControlSystemSimulation(ac_ctrl)
+
+ac_sim.input['temperature'] = 10  
+ac_sim.input['humidity'] = 50 
+ac_sim.input['people'] = 4  
+ac_sim.compute()
+print(f"Fan Speed: {ac_sim.output['fan_speed']}")
+print(f"Cooling Level: {ac_sim.output['cooling']}")
+fan_speed.view(sim=ac_sim)
+cooling.view(sim=ac_sim)
